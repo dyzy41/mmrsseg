@@ -144,6 +144,13 @@ class EncoderDecoderMMText(BaseSegmentor):
         """Encode images with backbone and decode into a semantic segmentation
         map of the same size as input."""
         x = self.extract_feat(inputs)
+        text_token = self.get_text(batch_img_metas, False)
+        text_feature = self.text_encoder(text_token.to(x[0].device))
+
+
+        if self.with_neck:
+            x = self.neck(x, text_feature)
+
         seg_logits = self.decode_head.predict(x, batch_img_metas,
                                               self.test_cfg)
 
