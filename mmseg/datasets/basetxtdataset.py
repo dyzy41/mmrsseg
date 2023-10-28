@@ -244,6 +244,7 @@ class TXTSegDataset(BaseDataset):
                 f'Failed to load `ann_file` {self.ann_file}'
             lines = mmengine.list_from_file(
                 self.ann_file, backend_args=self.backend_args)
+            jsondata = self.load_json('/'.join(lines[0].split('/')[-4:])+'_ViT-L-14.json')
             for line in lines:
                 pimg = line.strip().split('  ')[0]
                 plab = line.strip().split('  ')[1]
@@ -256,6 +257,7 @@ class TXTSegDataset(BaseDataset):
                 data_info['label_map'] = self.label_map
                 data_info['reduce_zero_label'] = self.reduce_zero_label
                 data_info['seg_fields'] = []
+                data_info['json'] = jsondata['/'.join(pimg.split('/')[-4:])]
                 data_list.append(data_info)
                 # 备注2通过txt文件读取图片和标签的代码在这里修改。
         else:
