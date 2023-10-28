@@ -3,8 +3,9 @@ from collections import OrderedDict
 import torch
 from torch import nn
 from torch.nn import functional as F
+import math
 
-from open_clip.utils import freeze_batch_norm_2d
+from mmseg.models.open_clip.utils import freeze_batch_norm_2d
 
 from mmseg.registry import MODELS
 
@@ -103,7 +104,7 @@ class ModifiedResNet(nn.Module):
     - The final pooling layer is a QKV attention instead of an average pool
     """
 
-    def __init__(self, layers, output_dim, heads, image_size=224, width=64, pretrained=None):
+    def __init__(self, layers, output_dim=1024, heads=32, image_size=224, width=64, pretrained=None):
         super().__init__()
         self.output_dim = output_dim
         self.image_size = image_size

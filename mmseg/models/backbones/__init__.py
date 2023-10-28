@@ -26,7 +26,7 @@ from .vit import VisionTransformer
 from .vpd import VPD
 
 from .modified_resnet import ModifiedResNet
-from .transformer impotr TextTransformer
+from .transformer import TextTransformer
 
 __all__ = [
     'ResNet', 'ResNetV1c', 'ResNetV1d', 'ResNeXt', 'HRNet', 'FastSCNN',

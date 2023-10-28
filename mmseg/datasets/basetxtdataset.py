@@ -230,6 +230,11 @@ class TXTSegDataset(BaseDataset):
                              f'as metainfo is {self._metainfo}.')
         return new_palette
 
+    def load_json(self, json_path):
+        with open(json_path, 'r') as f:
+            data = json.load(f)
+        return data
+
     def load_data_list(self) -> List[dict]:
         """Load annotation from directory or annotation file.
 
@@ -244,7 +249,7 @@ class TXTSegDataset(BaseDataset):
                 f'Failed to load `ann_file` {self.ann_file}'
             lines = mmengine.list_from_file(
                 self.ann_file, backend_args=self.backend_args)
-            jsondata = self.load_json('/'.join(lines[0].split('/')[-4:])+'_ViT-L-14.json')
+            jsondata = self.load_json(os.path.dirname(os.path.dirname(lines[0].strip().split('  ')[0]))+'_ViT-L-14.json')
             for line in lines:
                 pimg = line.strip().split('  ')[0]
                 plab = line.strip().split('  ')[1]

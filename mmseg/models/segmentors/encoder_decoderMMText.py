@@ -13,10 +13,11 @@ from mmseg.utils import (ConfigType, OptConfigType, OptMultiConfig,
 from .base import BaseSegmentor
 
 from mmseg.models.open_clip import get_tokenizer
+import os
 
 
 @MODELS.register_module()
-class EncoderDecoderMM(BaseSegmentor):
+class EncoderDecoderMMText(BaseSegmentor):
     """Encoder Decoder segmentors.
 
     EncoderDecoder typically consists of backbone, decode_head, auxiliary_head.
@@ -102,7 +103,7 @@ class EncoderDecoderMM(BaseSegmentor):
 
         assert self.with_decode_head
 
-        self.tokenizer = get_tokenizer(model_name)
+        self.tokenizer = get_tokenizer('RN50')
 
     def _init_decode_head(self, decode_head: ConfigType) -> None:
         """Initialize ``decode_head``"""
@@ -126,17 +127,17 @@ class EncoderDecoderMM(BaseSegmentor):
         text_list = []
         for i in range(len(img_infos)):
             if train:
-                text = ', '.join(['remote sensing image foreground objects']+img_infos[i].json)
+                text = img_infos[i].json
             else:
-                text = ', '.join(['remote sensing image foreground objects']+img_infos[i]['json'])
+                text = img_infos[i]['json']
             text_list.append(text)
-        text_feature =  self.tokenizer(text, context_length=self.context_length).unsqueeze(0)
+        text_feature =  self.tokenizer(text_list)
         return text_feature
 
     def extract_feat(self, inputs: Tensor) -> List[Tensor]:
         """Extract features from images."""
         x = self.backbone(inputs)
-        return x
+        return x[1]
 
     def encode_decode(self, inputs: Tensor,
                       batch_img_metas: List[dict]) -> Tensor:
@@ -189,15 +190,17 @@ class EncoderDecoderMM(BaseSegmentor):
         """
 
         x = self.extract_feat(inputs)
-        text_feature = self.text_encoder(data_samples)
+        text_token = self.get_text(data_samples)
+        text_feature = self.text_encoder(text_token.to(x[0].device))
+
+
+        if self.with_neck:
+            x = self.neck(x, text_feature)
 
         losses = dict()
 
         loss_decode = self._decode_head_forward_train(x, data_samples)
         losses.update(loss_decode)
-
-        if self.with_neck:
-            x = self.neck(x)
 
         if self.with_auxiliary_head:
             loss_aux = self._auxiliary_head_forward_train(x, data_samples)

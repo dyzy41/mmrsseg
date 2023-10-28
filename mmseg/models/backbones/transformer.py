@@ -8,8 +8,8 @@ from torch import nn
 from torch.nn import functional as F
 from torch.utils.checkpoint import checkpoint
 
-from .utils import to_2tuple
-from .pos_embed import get_2d_sincos_pos_embed
+from mmseg.models.open_clip.utils import to_2tuple
+from mmseg.models.open_clip.pos_embed import get_2d_sincos_pos_embed
 
 from mmseg.registry import MODELS
 
@@ -586,6 +586,7 @@ class TextTransformer(nn.Module):
             act_layer: Callable = nn.GELU,
             norm_layer: Callable = LayerNorm,
             output_tokens: bool = False,
+            pretrained=None
     ):
         super().__init__()
         assert pool_type in ('first', 'last', 'argmax', 'none')
@@ -597,6 +598,7 @@ class TextTransformer(nn.Module):
         self.heads = heads
         self.pad_id = pad_id
         self.pool_type = pool_type
+        self.pretrained = pretrained
 
         self.token_embedding = nn.Embedding(vocab_size, width)
         if embed_cls:

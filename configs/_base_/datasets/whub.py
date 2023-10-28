@@ -1,6 +1,6 @@
 # dataset settings
 dataset_type = 'TXTSegDataset'
-data_root = '/data2/dsj_data/whub_seg'
+data_root = ''
 crop_size = (512, 512)
 train_pipeline = [
     dict(type='LoadImageFromFile'),
