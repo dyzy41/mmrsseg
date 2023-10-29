@@ -106,7 +106,7 @@ optim_wrapper = dict(
         }))
 
 # training schedule for 20k
-train_cfg = dict(type='IterBasedTrainLoop', max_iters=40000, val_interval=500)
+train_cfg = dict(type='IterBasedTrainLoop', max_iters=40000, val_interval=10)
 val_cfg = dict(type='ValLoop')
 test_cfg = dict(type='TestLoop')
 default_hooks = dict(

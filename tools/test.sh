@@ -7,7 +7,7 @@ work_dirs=$4
 model_checkpoint=$(find "$work_dirs" -name 'best_mIoU_iter_*.pth' -type f -print -quit)
 echo $model_checkpoint
 if [ "$data_name" == "WHUB" ]; then
-    label_dir="/home/user/dsj_files/datasets/whub_seg/test/label"
+    label_dir="/home/ps/HDD/zhaoyq_data/DATASET/whub_seg/test/label"
     bash tools/dist_test.sh "$config_file" "$model_checkpoint" $num_gpu --out "$work_dirs/test_result"
     python tools/general/vis.py --pppred "$work_dirs/test_result"
     python tools/metric.py --pppred "$work_dirs/test_result" --gggt "$label_dir" --gt_suffix ".tif"

@@ -7,8 +7,10 @@ from .multimodal_encoder_decoder import MultimodalEncoderDecoder
 from .seg_tta import SegTTAModel
 
 from .encoder_decoderMMText import EncoderDecoderMMText
+from .BuildFormer import BuildFormerSegDP
 
 __all__ = [
     'BaseSegmentor', 'EncoderDecoder', 'CascadeEncoderDecoder', 'SegTTAModel',
-    'MultimodalEncoderDecoder', 'DepthEstimator', 'EncoderDecoderMMText'
+    'MultimodalEncoderDecoder', 'DepthEstimator', 'EncoderDecoderMMText',
+    'BuildFormerSegDP'
 ]

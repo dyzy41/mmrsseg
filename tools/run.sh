@@ -5,5 +5,5 @@
 
 # bash tools/test.sh WHUB configs/0seg/mmseg_text_whub.py 4 work_dirs/mmseg_text_whub
 
-bash tools/dist_train.sh configs/0seg/mmseg_text_whub.py 2 --work-dir work_dirs/mmseg_text_whub_v2
-tools/test.sh WHUB configs/0seg/mmseg_text_whub.py 2 work_dirs/mmseg_text_whub_v2
+bash tools/dist_train.sh configs/0seg/buildformer.py 2 --work-dir work_dirs/buildformer
+tools/test.sh WHUB configs/0seg/buildformer.py 2 work_dirs/buildformer
