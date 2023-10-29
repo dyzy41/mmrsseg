@@ -327,7 +327,8 @@ class Transformer(nn.Module):
         return x
 
 
-class VisionTransformer(nn.Module):
+@MODELS.register_module()
+class CLIPVisionTransformer(nn.Module):
     output_tokens: torch.jit.Final[bool]
 
     def __init__(
@@ -351,6 +352,8 @@ class VisionTransformer(nn.Module):
             act_layer: Callable = nn.GELU,
             norm_layer: Callable = LayerNorm,
             output_tokens: bool = False,
+            out_indices=[3, 5, 7, 11],
+            pretrained=None
     ):
         super().__init__()
         assert pool_type in ('tok', 'avg', 'none')
@@ -360,6 +363,10 @@ class VisionTransformer(nn.Module):
         self.grid_size = (image_height // patch_height, image_width // patch_width)
         self.final_ln_after_pool = final_ln_after_pool  # currently ignored w/ attn pool enabled
         self.output_dim = output_dim
+
+        self.pretrained = pretrained
+        self.spatial_size = image_size // patch_size
+        self.out_indices = out_indices
 
         self.conv1 = nn.Conv2d(in_channels=3, out_channels=width, kernel_size=patch_size, stride=patch_size, bias=False)
 
@@ -432,7 +439,101 @@ class VisionTransformer(nn.Module):
         self.ln_post = norm_layer(pool_dim)
         self.proj = nn.Parameter(scale * torch.randn(pool_dim, output_dim))
 
-        self.init_parameters()
+        embed_dim = width
+
+        if patch_size == 16:
+            self.fpn1 = nn.Sequential(
+                nn.GroupNorm(1, embed_dim),
+                nn.ConvTranspose2d(embed_dim, embed_dim, kernel_size=2, stride=2),
+                nn.BatchNorm2d(embed_dim),
+                nn.GELU(),
+                nn.ConvTranspose2d(embed_dim, embed_dim, kernel_size=2, stride=2),
+            )
+
+            self.fpn2 = nn.Sequential(
+                nn.GroupNorm(1, embed_dim),
+                nn.ConvTranspose2d(embed_dim, embed_dim, kernel_size=2, stride=2),
+            )
+
+            self.fpn3 = nn.GroupNorm(1, embed_dim)
+
+            self.fpn4 = nn.Sequential(
+                nn.GroupNorm(1, embed_dim),
+                nn.MaxPool2d(kernel_size=2, stride=2)
+            )
+
+        elif patch_size == 8:
+            self.fpn1 = nn.Sequential(
+                nn.GroupNorm(1, embed_dim),
+                nn.ConvTranspose2d(embed_dim, embed_dim, kernel_size=2, stride=2),
+            )
+
+            self.fpn2 = nn.GroupNorm(1, embed_dim)
+
+            self.fpn3 = nn.Sequential(
+                nn.GroupNorm(1, embed_dim),
+                nn.MaxPool2d(kernel_size=2, stride=2),
+            )
+
+            self.fpn4 = nn.Sequential(
+                nn.GroupNorm(1, embed_dim),
+                nn.MaxPool2d(kernel_size=4, stride=4),
+            )
+        elif patch_size == 32:
+            self.fpn1 = nn.Sequential(
+                nn.GroupNorm(1, embed_dim),
+                nn.ConvTranspose2d(embed_dim, embed_dim, kernel_size=2, stride=2),
+                nn.BatchNorm2d(embed_dim),
+                nn.GELU(),
+                nn.ConvTranspose2d(embed_dim, embed_dim, kernel_size=2, stride=2),
+                nn.BatchNorm2d(embed_dim),
+                nn.GELU(),
+                nn.ConvTranspose2d(embed_dim, embed_dim, kernel_size=2, stride=2),
+            )
+
+            self.fpn2 = nn.Sequential(
+                nn.GroupNorm(1, embed_dim),
+                nn.ConvTranspose2d(embed_dim, embed_dim, kernel_size=2, stride=2),
+                nn.BatchNorm2d(embed_dim),
+                nn.GELU(),
+                nn.ConvTranspose2d(embed_dim, embed_dim, kernel_size=2, stride=2),
+            )
+
+            self.fpn3 = nn.Sequential(
+                nn.GroupNorm(1, embed_dim),
+                nn.ConvTranspose2d(embed_dim, embed_dim, kernel_size=2, stride=2),
+            )
+
+            self.fpn4 = nn.GroupNorm(1, embed_dim)
+
+
+        # self.init_parameters()
+
+    def init_weights(self, pretrained=None):
+        pretrained = pretrained or self.pretrained
+        if isinstance(pretrained, str):
+            checkpoint = torch.load(pretrained, map_location='cpu')
+
+            state_dict = {}
+
+            for k in checkpoint.keys():
+                if k.startswith('visual.'):
+                    new_k = k.replace('visual.', '')
+                    state_dict[new_k] = checkpoint[k]
+
+            if 'positional_embedding' in state_dict.keys():
+                if self.positional_embedding.shape != state_dict['positional_embedding'].shape:
+                    print(f'Resize the pos_embed shape from {state_dict["positional_embedding"].shape} to {self.positional_embedding.shape}')
+                    cls_pos = state_dict["positional_embedding"][0:1, :]
+                    # if vit32，reshape(1, 7, 7, 768), if vit16，reshape(1, 14, 14, 768)
+                    spatial_pos = F.interpolate(state_dict["positional_embedding"][1:,].reshape(1, 7, 7, 768).permute(0, 3, 1, 2), size=(self.spatial_size, self.spatial_size), mode='bilinear')
+                    spatial_pos = spatial_pos.reshape(768, self.spatial_size*self.spatial_size).permute(1, 0)
+                    positional_embedding = torch.cat([cls_pos, spatial_pos], dim=0)
+                    state_dict['positional_embedding'] = positional_embedding
+                    assert self.positional_embedding.shape == state_dict['positional_embedding'].shape
+
+            u, w = self.load_state_dict(state_dict, False)
+            print(u, w, 'are misaligned params in vision transformer')
 
     def lock(self, unlocked_groups=0, freeze_bn_stats=False):
         for param in self.parameters():
@@ -503,6 +604,7 @@ class VisionTransformer(nn.Module):
 
     def forward(self, x: torch.Tensor):
         x = self.conv1(x)  # shape = [*, width, grid, grid]
+        B, C, H, W = x.shape
         x = x.reshape(x.shape[0], x.shape[1], -1)  # shape = [*, width, grid ** 2]
         x = x.permute(0, 2, 1)  # shape = [*, grid ** 2, width]
 
@@ -515,8 +617,19 @@ class VisionTransformer(nn.Module):
         x = self.ln_pre(x)
 
         x = x.permute(1, 0, 2)  # NLD -> LND
-        x = self.transformer(x)
-        x = x.permute(1, 0, 2)  # LND -> NLD
+
+        features = []
+        for i, blk in enumerate(self.transformer.resblocks):
+            x = blk(x)
+            if i in self.out_indices:
+                xp = x.permute(1, 0, 2)[:, 1:, :].permute(0, 2, 1).reshape(B, -1, H, W)
+                features.append(xp.contiguous())
+        ops = [self.fpn1, self.fpn2, self.fpn3, self.fpn4]
+        for i in range(len(features)):
+            features[i] = ops[i](features[i])
+
+        # x = self.transformer(x)
+        # x = x.permute(1, 0, 2)  # LND -> NLD
 
         if self.attn_pool is not None:
             if self.attn_pool_contrastive is not None:
@@ -546,7 +659,8 @@ class VisionTransformer(nn.Module):
         if self.output_tokens:
             return pooled, tokens
         
-        return pooled
+        # return pooled
+        return pooled, features
 
 
 def text_global_pool(x, text: Optional[torch.Tensor] = None, pool_type: str = 'argmax'):

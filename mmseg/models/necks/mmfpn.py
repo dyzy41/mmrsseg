@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch.nn as nn
+import torch
 import torch.nn.functional as F
 from mmcv.cnn import ConvModule
 from mmengine.model import BaseModule

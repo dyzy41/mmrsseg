@@ -26,19 +26,22 @@ data_preprocessor = dict(
 model = dict(
     type='EncoderDecoderMMText',
     data_preprocessor=data_preprocessor,
-    pretrained='~/.cache/RemoteCLIP/RemoteCLIP-RN50.pt',
+    pretrained='~/.cache/RemoteCLIP/RemoteCLIP-ViT-B-32.pt',
     backbone=dict(
-        type='ModifiedResNet',
-        layers=[3, 4, 6, 3],
-        output_dim=1024,
+        type='CLIPVisionTransformer',
         image_size=512,
+        patch_size=32,
+        width=768,
+        layers=12,
+        heads=12,
+        mlp_ratio=4.0
         ),
     text_encoder=dict(
         type='TextTransformer',
     ),
     neck=dict(
         type='mmFPN',
-        in_channels=[256, 512, 1024, 2048],
+        in_channels=[768, 768, 768, 768],
         out_channels=256,
         num_outs=4),
     decode_head=dict(
