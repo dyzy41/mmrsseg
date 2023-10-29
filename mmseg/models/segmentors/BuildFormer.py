@@ -12,7 +12,6 @@ from mmseg.utils import (ConfigType, OptConfigType, OptMultiConfig,
                          OptSampleList, SampleList, add_prefix)
 from .encoder_decoder import EncoderDecoder
 
-from mmseg.models.open_clip import get_tokenizer
 import torch
 import torch.nn.functional as F
 import numpy as np
@@ -38,6 +37,7 @@ class BuildFormerSegDP(EncoderDecoder):
                  window_sizes=[16, 16, 16, 16],
                  num_classes=2):
         super().__init__(backbone=backbone, decode_head=decode_head, data_preprocessor=data_preprocessor, init_cfg=init_cfg)
+
         self.backbone = BuildFormer(layers=[2, 2, 6, 2], num_heads=[4, 8, 16, 32],
                                     dims=dims, window_sizes=window_sizes)
 
