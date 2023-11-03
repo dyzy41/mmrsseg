@@ -9,5 +9,8 @@
 # bash tools/test.sh WHUB configs/0seg/mmseg_text_whub.py 2 work_dirs/mmseg_text_whub_v2
 
 
-bash tools/dist_train.sh configs/0seg/mmseg_text_whub_vit.py 2 --work-dir work_dirs/mmseg_text_whub_vit
-bash tools/test.sh WHUB configs/0seg/mmseg_text_whub_vit.py 2 work_dirs/mmseg_text_whub_vit
+# bash tools/dist_train.sh configs/0seg/mmseg_text_whub_vit.py 2 --work-dir work_dirs/mmseg_text_whub_vit
+# bash tools/test.sh WHUB configs/0seg/mmseg_text_whub_vit.py 2 work_dirs/mmseg_text_whub_vit
+
+bash tools/dist_train.sh configs/0seg/mmseg_text_whub_v2.py 2 --work-dir work_dirs/mmseg_text_whub_v2
+bash tools/test.sh WHUB configs/0seg/mmseg_text_whub_v2.py 2 work_dirs/mmseg_text_whub_v2
