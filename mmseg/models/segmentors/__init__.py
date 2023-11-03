@@ -9,9 +9,10 @@ from .seg_tta import SegTTAModel
 from .encoder_decoderMMText import EncoderDecoderMMText
 from .BuildFormer import BuildFormerSegDP
 from .UNetFormer import UNetFormer
+from .encoder_decoderMM import EncoderDecoderMM
 
 __all__ = [
     'BaseSegmentor', 'EncoderDecoder', 'CascadeEncoderDecoder', 'SegTTAModel',
     'MultimodalEncoderDecoder', 'DepthEstimator', 'EncoderDecoderMMText',
-    'BuildFormerSegDP', 'UNetFormer'
+    'BuildFormerSegDP', 'UNetFormer', 'EncoderDecoderMM'
 ]

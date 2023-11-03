@@ -12,9 +12,12 @@ from mmseg.utils import (ConfigType, OptConfigType, OptMultiConfig,
                          OptSampleList, SampleList, add_prefix)
 from .base import BaseSegmentor
 
+from mmseg.models.open_clip import get_tokenizer
+import os
+
 
 @MODELS.register_module()
-class EncoderDecoder(BaseSegmentor):
+class EncoderDecoderMM(BaseSegmentor):
     """Encoder Decoder segmentors.
 
     EncoderDecoder typically consists of backbone, decode_head, auxiliary_head.
@@ -72,6 +75,7 @@ class EncoderDecoder(BaseSegmentor):
 
     def __init__(self,
                  backbone: ConfigType,
+                 text_encoder: ConfigType,
                  decode_head: ConfigType,
                  neck: OptConfigType = None,
                  auxiliary_head: OptConfigType = None,
@@ -82,11 +86,13 @@ class EncoderDecoder(BaseSegmentor):
                  init_cfg: OptMultiConfig = None):
         super().__init__(
             data_preprocessor=data_preprocessor, init_cfg=init_cfg)
+        pretrained = os.path.expanduser(pretrained)
         if pretrained is not None:
             assert backbone.get('pretrained') is None, \
                 'both backbone and segmentor set pretrained weight'
             backbone.pretrained = pretrained
         self.backbone = MODELS.build(backbone)
+        # self.text_encoder = MODELS.build(text_encoder)
         if neck is not None:
             self.neck = MODELS.build(neck)
         self._init_decode_head(decode_head)
@@ -97,10 +103,11 @@ class EncoderDecoder(BaseSegmentor):
 
         assert self.with_decode_head
 
+        self.tokenizer = get_tokenizer('RN50')
+
     def _init_decode_head(self, decode_head: ConfigType) -> None:
         """Initialize ``decode_head``"""
         self.decode_head = MODELS.build(decode_head)
-        self.decode_head.cuda()
         self.align_corners = self.decode_head.align_corners
         self.num_classes = self.decode_head.num_classes
         self.out_channels = self.decode_head.out_channels
@@ -115,18 +122,35 @@ class EncoderDecoder(BaseSegmentor):
             else:
                 self.auxiliary_head = MODELS.build(auxiliary_head)
 
+    def get_text(self, img_infos, train=True):
+
+        text_list = []
+        for i in range(len(img_infos)):
+            if train:
+                text = img_infos[i].json
+            else:
+                text = img_infos[i]['json']
+            text_list.append(text)
+        text_feature =  self.tokenizer(text_list)
+        return text_feature
+
     def extract_feat(self, inputs: Tensor) -> List[Tensor]:
         """Extract features from images."""
         x = self.backbone(inputs)
-        if self.with_neck:
-            x = self.neck(x)
-        return x
+        return x[1]
 
     def encode_decode(self, inputs: Tensor,
                       batch_img_metas: List[dict]) -> Tensor:
         """Encode images with backbone and decode into a semantic segmentation
         map of the same size as input."""
         x = self.extract_feat(inputs)
+        # text_token = self.get_text(batch_img_metas, False)
+        # text_feature = self.text_encoder(text_token.to(x[0].device))
+
+
+        if self.with_neck:
+            x = self.neck(x)
+
         seg_logits = self.decode_head.predict(x, batch_img_metas,
                                               self.test_cfg)
 
@@ -173,6 +197,12 @@ class EncoderDecoder(BaseSegmentor):
         """
 
         x = self.extract_feat(inputs)
+        # text_token = self.get_text(data_samples)
+        # text_feature = self.text_encoder(text_token.to(x[0].device))
+
+
+        if self.with_neck:
+            x = self.neck(x)
 
         losses = dict()
 

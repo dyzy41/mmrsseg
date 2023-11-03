@@ -37,6 +37,7 @@ from .uper_head import UPerHead
 from .vpd_depth_head import VPDDepthHead
 
 from .null_head import NullDecodeHead
+from .swin_decode_head import SwinTHead
 
 __all__ = [
     'FCNHead', 'PSPHead', 'ASPPHead', 'PSAHead', 'NLHead', 'GCHead', 'CCHead',
@@ -47,5 +48,5 @@ __all__ = [
     'SegformerHead', 'ISAHead', 'STDCHead', 'IterativeDecodeHead',
     'KernelUpdateHead', 'KernelUpdator', 'MaskFormerHead', 'Mask2FormerHead',
     'LightHamHead', 'PIDHead', 'DDRHead', 'VPDDepthHead', 'SideAdapterCLIPHead',
-    'NullDecodeHead'
+    'NullDecodeHead', 'SwinTHead'
 ]

@@ -13,6 +13,7 @@ crop_size = (512, 512)
 
 # model settings
 norm_cfg = dict(type='SyncBN', requires_grad=True)
+backbone_norm_cfg = dict(type='LN', requires_grad=True)
 find_unused_parameters = True
 data_preprocessor = dict(
     type='SegDataPreProcessor',
@@ -42,12 +43,22 @@ model = dict(
         out_channels=256,
         num_outs=4),
     decode_head=dict(
-        type='UPerHead',
-        in_channels=[256, 512, 512, 512],
+        type='SwinTHead',
+        in_channels=[192, 192*2, 192*2, 192],
+        channels=384,
         in_index=[0, 1, 2, 3],
-        pool_scales=(1, 2, 3, 6),
-        channels=512,
-        dropout_ratio=0.1,
+        window_size=7,
+        mlp_ratio=4,
+        depths=(2, 2, 2, 2),
+        num_heads=(3, 6, 12, 24),
+        qkv_bias=True,
+        qk_scale=None,
+        drop_rate=0.,
+        attn_drop_rate=0.,
+        drop_path_rate=0.1,
+        act_cfg=dict(type='GELU'),
+        swin_norm_cfg=backbone_norm_cfg,
+        with_cp=False, 
         num_classes=2,
         norm_cfg=norm_cfg,
         align_corners=False,

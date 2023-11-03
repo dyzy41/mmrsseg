@@ -8,5 +8,14 @@
 # bash tools/dist_train.sh configs/0seg/buildformer.py 2 --work-dir work_dirs/buildformer
 # bash tools/test.sh WHUB configs/0seg/buildformer.py 2 work_dirs/buildformer
 
-bash tools/dist_train.sh configs/0seg/unetformer.py 2 --work-dir work_dirs/unetformer
-bash tools/test.sh WHUB configs/0seg/unetformer.py 2 work_dirs/unetformer
+# bash tools/dist_train.sh configs/0seg/baseline_whub.py 2 --work-dir work_dirs/baseline_whub
+# bash tools/test.sh WHUB configs/0seg/baseline_whub.py 2 work_dirs/baseline_whub
+
+# bash tools/dist_train.sh configs/0seg/mmseg_whub.py 2 --work-dir work_dirs/mmseg_whub
+# bash tools/test.sh WHUB configs/0seg/mmseg_whub.py 2 work_dirs/mmseg_whub
+
+# bash tools/dist_train.sh configs/0seg/mmseg_text_whub.py 2 --work-dir work_dirs/mmseg_text_whub
+# bash tools/test.sh WHUB configs/0seg/mmseg_text_whub.py 2 work_dirs/mmseg_text_whub
+
+# bash tools/dist_train.sh configs/0seg/mmseg_text_swin_whub.py 2 --work-dir work_dirs/mmseg_text_swin_whub
+# bash tools/test.sh WHUB configs/0seg/mmseg_text_swin_whub.py 2 work_dirs/mmseg_text_swin_whub
