@@ -194,7 +194,7 @@ class mmFPN(BaseModule):
 
         B, C, H, W = outs[0].shape
 
-        outs[1] = torch.cat([outs[1], self.lowrank(outs[1].view(B, C, H//2*W//2).permute(0, 2, 1), text).view(B, H//2, W//2, C).permute(0, 3, 1, 2)], dim=1)
+        # outs[1] = torch.cat([outs[1], self.lowrank(outs[1].view(B, C, H//2*W//2).permute(0, 2, 1), text).view(B, H//2, W//2, C).permute(0, 3, 1, 2)], dim=1)
         outs[2] = torch.cat([outs[2], self.lowrank(outs[2].view(B, C, H//4*W//4).permute(0, 2, 1), text).view(B, H//4, W//4, C).permute(0, 3, 1, 2)], dim=1)
         outs[3] = torch.cat([outs[3], self.lowrank(outs[3].view(B, C, H//8*W//8).permute(0, 2, 1), text).view(B, H//8, W//8, C).permute(0, 3, 1, 2)], dim=1)
 

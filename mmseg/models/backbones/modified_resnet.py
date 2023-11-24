@@ -137,7 +137,10 @@ class ModifiedResNet(nn.Module):
     def init_weights(self, pretrained=None):
         pretrained = pretrained or self.pretrained
         if isinstance(pretrained, str):
-            checkpoint = torch.load(pretrained, map_location='cpu')
+            if 'Remote' in pretrained:
+                checkpoint = torch.load(pretrained, map_location='cpu')
+            else:
+                checkpoint = torch.jit.load(pretrained, map_location='cpu').float().state_dict()
 
             state_dict = {}
 

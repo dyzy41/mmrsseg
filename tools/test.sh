@@ -8,7 +8,11 @@ model_checkpoint=$(find "$work_dirs" -name 'best_mIoU_iter_*.pth' -type f -print
 echo $model_checkpoint
 if [ "$data_name" == "WHUB" ]; then
     label_dir="/home/ps/HDD/zhaoyq_data/DATASET/whub_seg/test/label"
-    bash tools/dist_test.sh "$config_file" "$model_checkpoint" $num_gpu --out "$work_dirs/test_result"
+    if [ "$num_gpu" != "1" ]; then
+        bash tools/dist_test.sh "$config_file" "$model_checkpoint" $num_gpu --out "$work_dirs/test_result"
+    else
+        python tools/test.py "$config_file" "$model_checkpoint" --out "$work_dirs/test_result"
+    fi
     python tools/general/vis.py --pppred "$work_dirs/test_result"
     python tools/metric.py --pppred "$work_dirs/test_result" --gggt "$label_dir" --gt_suffix ".tif"
 elif [ "$data_name" == "SYSU" ]; then

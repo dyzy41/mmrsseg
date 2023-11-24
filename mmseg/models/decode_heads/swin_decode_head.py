@@ -116,7 +116,7 @@ class SwinTHead(BaseDecodeHead):
                         norm_cfg=self.norm_cfg,
                         act_cfg=act_cfg),
                         ConvModule(
-                        in_channels=512,
+                        in_channels=256,
                         out_channels=192,
                         kernel_size=3,
                         stride=1,
@@ -125,7 +125,7 @@ class SwinTHead(BaseDecodeHead):
                         norm_cfg=self.norm_cfg,
                         act_cfg=act_cfg),
                         ConvModule(
-                        in_channels=512,
+                        in_channels=256,
                         out_channels=192,
                         kernel_size=3,
                         stride=1,
@@ -134,7 +134,7 @@ class SwinTHead(BaseDecodeHead):
                         norm_cfg=self.norm_cfg,
                         act_cfg=act_cfg),
                         ConvModule(
-                        in_channels=512,
+                        in_channels=256,
                         out_channels=192,
                         kernel_size=3,
                         stride=1,
